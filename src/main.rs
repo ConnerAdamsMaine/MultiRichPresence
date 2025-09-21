@@ -6,9 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use sysinfo::System;
-use tokio::sync::mpsc;
 
-const APP_ID: &str = "1234567890123456789"; // Replace with your Discord app ID
+const APP_ID: &str = "1419145226261495808"; // Replace with your Discord app ID
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -106,8 +105,6 @@ pub struct DiscordRpcApp {
     new_custom_message: String,
     connection_status: String,
     
-    // Channels for communication
-    activity_sender: Option<mpsc::UnboundedSender<ActivityData>>,
 }
 
 impl DiscordRpcApp {
@@ -127,7 +124,6 @@ impl DiscordRpcApp {
             new_blacklisted_word: String::new(),
             new_custom_message: String::new(),
             connection_status: "Disconnected".to_string(),
-            activity_sender: None,
         };
         
         app.connect_discord();
@@ -199,15 +195,12 @@ impl DiscordRpcApp {
     fn start_system_monitoring(&mut self) {
         let activity_data = Arc::clone(&self.activity_data);
         let config = self.config.clone();
-        let (tx, rx) = mpsc::unbounded_channel();
-        self.activity_sender = Some(tx);
         
-        tokio::spawn(async move {
+        std::thread::spawn(move || {
             let mut system = System::new_all();
-            let mut interval = tokio::time::interval(Duration::from_secs(config.update_interval_seconds));
             
             loop {
-                interval.tick().await;
+                std::thread::sleep(Duration::from_secs(config.update_interval_seconds));
                 
                 system.refresh_all();
                 
