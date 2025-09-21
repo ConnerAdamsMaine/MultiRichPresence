@@ -1,3 +1,4 @@
+
 use chrono::{DateTime, Local};
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use eframe::egui;
