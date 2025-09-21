@@ -1,4 +1,4 @@
-# Discord Rich Presence App
+# MultiRichPresence
 
 A comprehensive Discord Rich Presence application built in Rust that displays system information, active applications, custom messages, and more with advanced filtering and customization options.
 
@@ -27,8 +27,8 @@ A comprehensive Discord Rich Presence application built in Rust that displays sy
 
 ```bash
 # Clone or create the project
-cargo new discord-rich-presence-app
-cd discord-rich-presence-app
+cargo new multi-rich-presence
+cd multi-rich-presence
 
 # Copy the provided Cargo.toml and main.rs files
 # Then build the application
@@ -85,7 +85,7 @@ cargo run --release
 ## File Structure
 
 ```
-discord-rich-presence-app/
+multi-rich-presence/
 ├── Cargo.toml          # Dependencies and project configuration
 ├── src/
 │   └── main.rs         # Main application code

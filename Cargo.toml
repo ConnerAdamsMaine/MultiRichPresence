@@ -1,8 +1,8 @@
 [package]
-name = "MultiRichPresence"
+name = "multi-rich-presence"
 version = "0.1.0"
 edition = "2021"
-author = "404ConnerNotFound"
+description = "A comprehensive Discord Rich Presence application with system monitoring, custom messages, and advanced filtering"
 
 [dependencies]
 # Discord RPC

@@ -137,7 +137,7 @@ impl DiscordRpcApp {
     }
     
     fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
-        let dirs = directories::ProjectDirs::from("com", "discord-rpc-app", "discord-rpc-app")
+        let dirs = directories::ProjectDirs::from("com", "multirichpresence", "MultiRichPresence")
             .ok_or("Could not find project directory")?;
         
         let config_path = dirs.config_dir().join("config.json");
@@ -151,7 +151,7 @@ impl DiscordRpcApp {
     }
     
     fn save_config(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let dirs = directories::ProjectDirs::from("com", "discord-rpc-app", "discord-rpc-app")
+        let dirs = directories::ProjectDirs::from("com", "multirichpresence", "MultiRichPresence")
             .ok_or("Could not find project directory")?;
         
         std::fs::create_dir_all(dirs.config_dir())?;
@@ -349,7 +349,7 @@ impl DiscordRpcApp {
                 // Add large image
                 activity_builder = activity_builder.assets(|a| {
                     a.large_image("default")
-                        .large_text("Discord Rich Presence App")
+                        .large_text("MultiRichPresence")
                 });
                 
                 if let Err(e) = client.set_activity(activity_builder) {
@@ -373,7 +373,7 @@ impl eframe::App for DiscordRpcApp {
         ctx.request_repaint_after(Duration::from_secs(1));
         
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Discord Rich Presence App");
+            ui.heading("MultiRichPresence");
             
             ui.horizontal(|ui| {
                 ui.label("Status:");
@@ -530,7 +530,7 @@ fn main() -> Result<(), eframe::Error> {
     };
     
     eframe::run_native(
-        "Discord Rich Presence App",
+        "MultiRichPresence",
         options,
         Box::new(|cc| Ok(Box::new(DiscordRpcApp::new(cc)))),
     )

@@ -1,7 +1,5 @@
-#!/bin/bash
-
-echo "Discord Rich Presence App Setup"
-echo "=================================="
+echo "MultiRichPresence Setup"
+echo "======================="
 echo
 
 # Check if Rust is installed
@@ -37,7 +35,7 @@ echo "3. Copy the Application ID"
 echo "4. Replace APP_ID in main.rs with your Application ID"
 echo "5. Rebuild with: cargo build --release"
 echo
-echo "The executable is located at: target/release/discord-rich-presence-app"
+echo "The executable is located at: target/release/multi-rich-presence"
 echo
 
 # Ask if user wants to run the app
@@ -45,13 +43,13 @@ read -p "Do you want to run the app now? (y/n): " choice
 case "$choice" in 
     y|Y|yes|YES ) 
         echo
-        echo "Starting Discord Rich Presence App..."
-        ./target/release/discord-rich-presence-app
+        echo "Starting MultiRichPresence..."
+        ./target/release/multi-rich-presence
         ;;
     * ) 
         echo
         echo "You can run the app later by executing:"
-        echo "./target/release/discord-rich-presence-app"
+        echo "./target/release/multi-rich-presence"
         ;;
 esac
 

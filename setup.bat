@@ -1,6 +1,6 @@
 @echo off
-echo Discord Rich Presence App Setup
-echo ==================================
+echo MultiRichPresence Setup
+echo ========================
 
 echo.
 echo Step 1: Checking Rust installation...
@@ -37,18 +37,18 @@ echo 3. Copy the Application ID
 echo 4. Replace APP_ID in main.rs with your Application ID
 echo 5. Rebuild with: cargo build --release
 echo.
-echo The executable is located at: target\release\discord-rich-presence-app.exe
+echo The executable is located at: target\release\multi-rich-presence.exe
 echo.
 
 set /p choice="Do you want to run the app now? (y/n): "
 if /i "%choice%"=="y" (
     echo.
-    echo Starting Discord Rich Presence App...
-    target\release\discord-rich-presence-app.exe
+    echo Starting MultiRichPresence...
+    target\release\multi-rich-presence.exe
 ) else (
     echo.
     echo You can run the app later by executing:
-    echo target\release\discord-rich-presence-app.exe
+    echo target\release\multi-rich-presence.exe
 )
 
 echo.
