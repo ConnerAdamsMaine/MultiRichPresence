@@ -3,10 +3,9 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use eframe::egui;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::System;
 use tokio::sync::mpsc;
 
 const APP_ID: &str = "1234567890123456789"; // Replace with your Discord app ID
@@ -112,7 +111,7 @@ pub struct DiscordRpcApp {
 }
 
 impl DiscordRpcApp {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let config = Self::load_config().unwrap_or_default();
         let word_filter = Self::create_word_filter(&config.blacklisted_words);
         
@@ -200,7 +199,7 @@ impl DiscordRpcApp {
     fn start_system_monitoring(&mut self) {
         let activity_data = Arc::clone(&self.activity_data);
         let config = self.config.clone();
-        let (tx, mut rx) = mpsc::unbounded_channel();
+        let (tx, rx) = mpsc::unbounded_channel();
         self.activity_sender = Some(tx);
         
         tokio::spawn(async move {
@@ -217,31 +216,29 @@ impl DiscordRpcApp {
                     memory_usage: (system.used_memory() as f64 / system.total_memory() as f64) * 100.0,
                     memory_total: system.total_memory(),
                     memory_used: system.used_memory(),
-                    uptime: system.uptime(),
+                    uptime: System::uptime(),
                     process_count: system.processes().len(),
                 };
                 
-                let mut processes: Vec<ProcessInfo> = system
-                    .processes()
-                    .iter()
-                    .filter(|(_, process)| {
-                        if config.activity_filters.hide_system_processes {
-                            !config.activity_filters.blacklisted_processes.contains(&process.name().to_string())
-                        } else {
-                            true
+                let mut processes: Vec<ProcessInfo> = Vec::new();
+                
+                for (pid, process) in system.processes() {
+                    if config.activity_filters.hide_system_processes {
+                        if config.activity_filters.blacklisted_processes.contains(&process.name().to_string()) {
+                            continue;
                         }
-                    })
-                    .filter(|(_, process)| {
-                        process.cpu_usage() >= config.activity_filters.minimum_cpu_usage
-                    })
-                    .map(|(pid, process)| ProcessInfo {
-                        name: process.name().to_string(),
-                        pid: pid.as_u32(),
-                        cpu_usage: process.cpu_usage(),
-                        memory_usage: process.memory(),
-                        start_time: process.start_time(),
-                    })
-                    .collect();
+                    }
+                    
+                    if process.cpu_usage() >= config.activity_filters.minimum_cpu_usage {
+                        processes.push(ProcessInfo {
+                            name: process.name().to_string(),
+                            pid: pid.as_u32(),
+                            cpu_usage: process.cpu_usage(),
+                            memory_usage: process.memory(),
+                            start_time: process.start_time(),
+                        });
+                    }
+                }
                 
                 processes.sort_by(|a, b| b.cpu_usage.partial_cmp(&a.cpu_usage).unwrap_or(std::cmp::Ordering::Equal));
                 processes.truncate(5); // Keep top 5 processes
@@ -342,15 +339,16 @@ impl DiscordRpcApp {
                 }
                 
                 // Add timestamps
-                activity_builder = activity_builder.timestamps(|t| {
-                    t.start(data.current_time.timestamp())
-                });
+                activity_builder = activity_builder.timestamps(
+                    activity::Timestamps::new().start(data.current_time.timestamp())
+                );
                 
                 // Add large image
-                activity_builder = activity_builder.assets(|a| {
-                    a.large_image("default")
+                activity_builder = activity_builder.assets(
+                    activity::Assets::new()
+                        .large_image("default")
                         .large_text("MultiRichPresence")
-                });
+                );
                 
                 if let Err(e) = client.set_activity(activity_builder) {
                     log::error!("Failed to set Discord activity: {}", e);
@@ -518,7 +516,7 @@ impl eframe::App for DiscordRpcApp {
     }
 }
 
-fn main() -> Result<(), eframe::Error> {
+fn main() -> eframe::Result<()> {
     env_logger::init();
     
     let options = eframe::NativeOptions {
@@ -532,6 +530,6 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "MultiRichPresence",
         options,
-        Box::new(|cc| Ok(Box::new(DiscordRpcApp::new(cc)))),
+        Box::new(|cc| Box::new(DiscordRpcApp::new(cc))),
     )
 }
