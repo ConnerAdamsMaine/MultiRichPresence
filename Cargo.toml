@@ -2,7 +2,7 @@
 name = "MultiRichPresence"
 version = "0.1.0"
 edition = "2021"
-author = "404ConnerNotFound
+author = "404ConnerNotFound"
 
 [dependencies]
 # Discord RPC
@@ -39,9 +39,6 @@ env_logger = "0.11"
 
 # Cross-platform
 directories = "5.0"
-
-# Process monitoring
-sysinfo = "0.30"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "processthreadsapi"] }
