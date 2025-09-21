@@ -291,69 +291,76 @@ impl DiscordRpcApp {
     }
     
     fn update_discord_activity(&mut self) {
+    // Do all the filtering BEFORE borrowing discord_client mutably
+    let activity_data = self.activity_data.lock().unwrap();
+    
+    if let Some(ref data) = *activity_data {
+        let mut details = String::new();
+        let mut state = String::new();
+        
+        // Pre-filter all text before mutable borrow
+        let filtered_custom_message = if !self.custom_message_input.is_empty() {
+            Some(self.filter_text(&self.custom_message_input))
+        } else {
+            None
+        };
+        
+        let filtered_process_name = if self.config.show_applications && !data.top_processes.is_empty() {
+            Some(self.filter_text(&data.top_processes[0].name))
+        } else {
+            None
+        };
+        
+        // Build details and state strings
+        if self.config.show_system_stats {
+            details = format!(
+                "CPU: {:.1}% | RAM: {:.1}%",
+                data.system_stats.cpu_usage,
+                data.system_stats.memory_usage
+            );
+        }
+        
+        if self.config.show_time {
+            if !state.is_empty() {
+                state.push_str(" | ");
+            }
+            state.push_str(&format!("Time: {}", data.current_time.format("%H:%M:%S")));
+        }
+        
+        if let Some(ref process_name) = filtered_process_name {
+            if !state.is_empty() {
+                state.push_str(" | ");
+            }
+            state.push_str(&format!("Running: {}", process_name));
+        }
+        
+        // NOW do the mutable borrow
         if let Some(ref mut client) = self.discord_client {
-            let activity_data = self.activity_data.lock().unwrap();
+            let mut activity_builder = activity::Activity::new();
             
-            if let Some(ref data) = *activity_data {
-                let mut activity_builder = activity::Activity::new();
-                
-                // Build the activity based on configuration
-                let mut details = String::new();
-                let mut state = String::new();
-                
-                if self.config.show_system_stats {
-                    details = format!(
-                        "CPU: {:.1}% | RAM: {:.1}%",
-                        data.system_stats.cpu_usage,
-                        data.system_stats.memory_usage
-                    );
-                }
-                
-                if self.config.show_time {
-                    if !state.is_empty() {
-                        state.push_str(" | ");
-                    }
-                    state.push_str(&format!("Time: {}", data.current_time.format("%H:%M:%S")));
-                }
-                
-                if self.config.show_applications && !data.top_processes.is_empty() {
-                    let top_process = &data.top_processes[0];
-                    let filtered_name = self.filter_text(&top_process.name);
-                    
-                    if !state.is_empty() {
-                        state.push_str(" | ");
-                    }
-                    state.push_str(&format!("Running: {}", filtered_name));
-                }
-                
-                // Add custom message if provided
-                if !self.custom_message_input.is_empty() {
-                    let filtered_message = self.filter_text(&self.custom_message_input);
-                    activity_builder = activity_builder.details(&filtered_message);
-                } else if !details.is_empty() {
-                    activity_builder = activity_builder.details(&details);
-                }
-                
-                if !state.is_empty() {
-                    activity_builder = activity_builder.state(&state);
-                }
-                
-                // Add timestamps
-                activity_builder = activity_builder.timestamps(
-                    activity::Timestamps::new().start(data.current_time.timestamp())
-                );
-                
-                // Add large image
-                activity_builder = activity_builder.assets(
-                    activity::Assets::new()
-                        .large_image("default")
-                        .large_text("MultiRichPresence")
-                );
-                
-                if let Err(e) = client.set_activity(activity_builder) {
-                    log::error!("Failed to set Discord activity: {}", e);
-                    self.connection_status = format!("Activity update failed: {}", e);
-                }
+            if let Some(ref message) = filtered_custom_message {
+                activity_builder = activity_builder.details(message);
+            } else if !details.is_empty() {
+                activity_builder = activity_builder.details(&details);
+            }
+            
+            if !state.is_empty() {
+                activity_builder = activity_builder.state(&state);
+            }
+            
+            activity_builder = activity_builder.timestamps(
+                activity::Timestamps::new().start(data.current_time.timestamp())
+            );
+            
+            activity_builder = activity_builder.assets(
+                activity::Assets::new()
+                    .large_image("default")
+                    .large_text("MultiRichPresence")
+            );
+            
+            if let Err(e) = client.set_activity(activity_builder) {
+                log::error!("Failed to set Discord activity: {}", e);
+                self.connection_status = format!("Activity update failed: {}", e);
             }
         }
     }
