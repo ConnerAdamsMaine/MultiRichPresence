@@ -361,6 +361,7 @@ impl DiscordRpcApp {
             if let Err(e) = client.set_activity(activity_builder) {
                 log::error!("Failed to set Discord activity: {}", e);
                 self.connection_status = format!("Activity update failed: {}", e);
+                }
             }
         }
     }
